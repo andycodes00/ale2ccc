@@ -2,7 +2,9 @@
 
 Extract ASC CDL grades from an AvidLogExchange (ALE) file and write out to an ASC ColorCorrectionCollection (CCC)
 
-My 5 minutes of searching online for a script to do this already proved fruitless. So I threw this together. Its not pretty, but it gets the job done. 
+My 5 minutes of searching online for a script to do this already proved fruitless. So I threw this together. Its not pretty, but it gets the job done.
+
+The output .ccc has been tested to with the OCIOCDLTransform node in Nuke 6.3v8. 
 
 ## Usage
 
