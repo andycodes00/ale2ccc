@@ -61,12 +61,17 @@ class ColorCorrectionList(object):
             saturation = float
         """
 
-        #slope = (1.1583, 0.8242, 0.8109)
-        #offset = (-0.0064, 0.0287, 0.0448)
-        #power = (0.7710, 0.9064, 1.0039)
-        #saturation = 1.7000 
+        # if combining multiple ale files, assume last file is newest. do not
+        # edit the existing id, but instead add _v2 to it. - bit of a kludge.
+        for ref in self.dom.getElementsByTagName("ColorCorrection"):
+            if ref.attributes["id"].value == id:
+                version = 1
+                if re.match('.*_v\d+', id):
+                    version = int(re.findall('_v(\d+)$', id)[0]) + version
+                    id = re.sub("\d+$", str(version), id)
+                else:
+                    id = "%s_v%d" % (id, version)
 
-        # Start of ColorCorrection
         cc = self.dom.createElement('ColorCorrection')
         cc.attributes['id'] = id
         self.dom.childNodes[0].appendChild(cc)
@@ -105,49 +110,55 @@ class ColorCorrectionList(object):
         return self.dom.toprettyxml()
 
 # the first argument to the script is the input file, the second argument is the output file.
-if len(sys.argv) != 3:
+if len(sys.argv) < 3:
     raise Exception('Invalid number of arguments. Usage: %prog infile.ale outfile.ccc')
 
-ale_file = sys.argv[1]
-ccc_file = sys.argv[2]
+ale_files = sys.argv[1:-1]
+ccc_file = sys.argv[-1]
+
+print ale_files
+print ccc_file
 
 color_collection = ColorCorrectionList()
 
-with open(ale_file) as fp:
-    for line in iter(fp.readline, ''):
-        try:
-            line_tokens = re.split('[\t]', line.strip())
-            #print line_tokens
+for ale_file in ale_files:
+    with open(ale_file) as fp:
+        for line in iter(fp.readline, ''):
+            try:
+                line_tokens = re.split('[\t]', line.strip())
+                #print line_tokens
 
-            if line_tokens[0] == "Column":
-                nextline = fp.readline()
-                NAME_POS = [i for i,x in enumerate(re.split('[\t]', nextline)) if x == 'Name'][0]
-                ASC_SOP_POS = [i for i,x in enumerate(re.split('[\t]', nextline)) if x == 'ASC_SOP'][0]
-                ASC_SAT_POS = [i for i,x in enumerate(re.split('[\t]', nextline)) if x == 'ASC_SAT'][0]
+                if line_tokens[0] == "Column":
+                    nextline = fp.readline()
+                    NAME_POS = [i for i,x in enumerate(re.split('[\t]', nextline)) if x == 'Name'][0]
+                    ASC_SOP_POS = [i for i,x in enumerate(re.split('[\t]', nextline)) if x == 'ASC_SOP'][0]
+                    ASC_SAT_POS = [i for i,x in enumerate(re.split('[\t]', nextline)) if x == 'ASC_SAT'][0]
 
-            if line_tokens[0] == "Data":
-                for data in iter(fp.readline, ''):
-                    fields = re.split('[\t]', data)
-                    
-                    try:
-                        id = re.findall(NAMING_CONVENTION_REGEX, fields[NAME_POS])[0]
-                    except:
-                        print "turnover item %s does not match naming convention!" % fields[NAME_POS]
+                if line_tokens[0] == "Data":
+                    for data in iter(fp.readline, ''):
+                        fields = re.split('[\t]', data)
+                        
+                        try:
+                            id = re.findall(NAMING_CONVENTION_REGEX, fields[NAME_POS])[0]
+                        except:
+                            print "turnover item %s does not match naming convention!" % fields[NAME_POS]
 
-                    sop_tokens = re.findall('\d+\.\d+', fields[ASC_SOP_POS])
-                    saturation = fields[ASC_SAT_POS]
+                        sop_tokens = re.findall('\d+\.\d+', fields[ASC_SOP_POS])
+                        saturation = fields[ASC_SAT_POS]
 
-                    slope = sop_tokens[0:3]
-                    offset = sop_tokens[3:6]
-                    power = sop_tokens[6:9]
-                    
-                    color_collection.ColorCorrection(id, slope, offset, power, saturation)
+                        slope = sop_tokens[0:3]
+                        offset = sop_tokens[3:6]
+                        power = sop_tokens[6:9]
+                        
+                        color_collection.ColorCorrection(id, slope, offset, power, saturation)
 
-        except Exception as e:
-            # catch all for any dodgy formatted lines.
-            traceback.print_exc()
-            print e
+            except Exception as e:
+                # catch all for any dodgy formatted lines.
+                traceback.print_exc()
+                print e
              
-        
-with open(ccc_file, 'w') as fp:
-    fp.write(str(color_collection))
+try:        
+    with open(ccc_file, 'w') as fp:
+        fp.write(str(color_collection))
+except IOError:
+    print "unable to write to %s" % ccc_file
