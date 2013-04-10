@@ -8,7 +8,9 @@ The output .ccc has been tested to with the OCIOCDLTransform node in Nuke 6.3v8.
 
 ## Usage
 
-    %prog infile.ale outfile.ccc
+```bash
+%prog infile.ale outfile.ccc
+```
 
 * The variable NAMING_CONVENTION_REGEX contains the regex used to create an id
 attribute for each of the ColorCorrections contained in the collection.
@@ -20,6 +22,7 @@ will fail.
 
 Example Color Correction Collection file:
 
+```xml
     <ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.2">
       <ColorCorrection id="af-123">
               <SOPNode>
@@ -42,4 +45,4 @@ Example Color Correction Collection file:
                 </SATNode>
           </ColorCorrection>
     </ColorCorrectionCollection>
-
+```
