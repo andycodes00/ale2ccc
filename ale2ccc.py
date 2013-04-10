@@ -106,6 +106,13 @@ class ColorCorrectionList(object):
 
         SAT_node.appendChild(saturation_node)
 
+    def sortDomById(self):
+        def getkey(elem):
+            return elem.attributes["id"].value
+
+        container = self.dom.getElementsByTagName("ColorCorrection")
+        self.dom.childNodes[0].childNodes = sorted(container, key=getkey)
+    
     def __str__(self):
         return self.dom.toprettyxml()
 
@@ -156,6 +163,9 @@ for ale_file in ale_files:
                 # catch all for any dodgy formatted lines.
                 traceback.print_exc()
                 print e
+
+# sort the nodes for easier use in Nuke.
+color_collection.sortDomById()
              
 try:        
     with open(ccc_file, 'w') as fp:
